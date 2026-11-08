@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="de" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aethenia: Echoes of Rebirth - KI Pen & Paper RPG</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        aethenia: {
+                            bg: '#090a0f',
+                            panel: '#121520',
+                            border: '#2a2f45',
+                            gold: '#fbbf24',
+                            mana: '#3b82f6',
+                            hp: '#ef4444',
+                            srank: '#f43f5e',
+                            purple: '#a855f7'
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['Cinzel', 'Georgia', 'serif'],
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Inter:wght@300;400;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #090a0f;
+            color: #e2e8f0;
+        }
+        .fantasy-font { font-family: 'Cinzel', serif; }
+        .mono-font { font-family: 'Fira Code', monospace; }
+        
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #121520; }
+        ::-webkit-scrollbar-thumb { background: #2a2f45; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #fbbf24; }
+
+        /* Glow Effects */
+        .status-window-glow { box-shadow: 0 0 20px rgba(59, 130, 246, 0.15), inset 0 0 15px rgba(59, 130, 246, 0.05); }
+        .s-rank-glow { box-shadow: 0 0 15px rgba(244, 63, 94, 0.4); }
+        .gold-glow { box-shadow: 0 0 10px rgba(251, 191, 36, 0.3); }
+
+        /* Status window scanlines effect */
+        .status-scanline {
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden bg-aethenia-bg text-slate-200">
+
+    <!-- CHARACTER CREATION MODAL (OVERLAY ON START) -->
+    <div id="charCreationModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-aethenia-panel border border-amber-500/40 rounded-2xl w-full max-w-3xl p-6 space-y-6 shadow-2xl relative my-8 status-window-glow">
+            <div class="text-center space-y-2 border-b border-slate-800 pb-4">
+                <span class="text-xs font-semibold uppercase tracking-widest text-amber-500 mono-font">[ REINCARNATION SYSTEM ACTIVE ]</span>
+                <h1 class="text-3xl font-extrabold text-amber-400 fantasy-font">Willkommen in Aethenia</h1>
+                <p class="text-xs text-slate-400">Du bist gestorben. Bevor deine Seele erwacht, bestimme deine Existenz in der neuen Welt.</p>
+            </div>
+
+            <!-- Creation Tabs / Sections Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                <!-- Basic Info -->
+                <div class="space-y-4 bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+                    <h3 class="font-bold text-amber-400 fantasy-font border-b border-slate-800 pb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-id-card"></i> Persona & Abstammung
+                    </h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">Name</label>
+                            <input type="text" id="initName" value="Kaelen" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-amber-200 outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">Geschlecht</label>
+                            <select id="initGender" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-slate-200 outline-none focus:border-amber-500">
+                                <option value="Männlich">Männlich</option>
+                                <option value="Weiblich">Weiblich</option>
+                                <option value="Divers">Divers</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">Alter</label>
+                            <input type="number" id="initAge" value="19" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-slate-200 outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">Rasse</label>
+                            <select id="initRace" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-slate-200 outline-none focus:border-amber-500">
+                                <option value="Mensch">Mensch</option>
+                                <option value="Hochelf">Hochelf</option>
+                                <option value="Dunkelfelf">Dunkelelf</option>
+                                <option value="Zwerg">Zwerg</option>
+                                <option value="Beastkin">Bestienmensch</option>
+                                <option value="Dämonenblut">Dämonenblut</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">Klasse</label>
+                            <select id="initClass" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-slate-200 outline-none focus:border-amber-500">
+                                <option value="Schattenklingen-Magier">Schatten-Magier</option>
+                                <option value="Paladin">Paladin</option>
+                                <option value="Krieger">Krieger</option>
+                                <option value="Erzmagier">Erzmagier</option>
+                                <option value="Waldläufer">Waldläufer</option>
+                                <option value="Schattenpriester">Schattenpriester</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Love Interest -->
+                    <div class="pt-2 border-t border-slate-800">
+                        <label class="text-xs text-amber-400 font-semibold block mb-1 flex items-center gap-1">
+                            <i class="fa-solid fa-heart text-rose-500"></i> Seelenverwandte(r) / Love-Interest
+                        </label>
+                        <input type="text" id="initLoveName" placeholder="Name des Wunsch-Charakters (z.B. Lyra)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 outline-none focus:border-amber-500 mb-2">
+                        <textarea id="initLoveDesc" rows="2" placeholder="Beschreibung (Aussehen, Persönlichkeit, Herkunft...)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 outline-none focus:border-amber-500 resize-none"></textarea>
+                    </div>
+                </div>
+
+                <!-- Attributes & S-Rank Skill -->
+                <div class="space-y-4 bg-slate-900/60 p-4 rounded-xl border border-slate-800 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center border-b border-slate-800 pb-1 mb-3">
+                            <h3 class="font-bold text-amber-400 fantasy-font flex items-center gap-2">
+                                <i class="fa-solid fa-sliders"></i> Attribute (5er Basis)
+                            </h3>
+                            <span class="text-xs font-mono bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded border border-amber-500/40">
+                                Punkte: <span id="initFreePoints">15</span>
+                            </span>
+                        </div>
+
+                        <!-- Stat Point Allocator Grid -->
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div class="flex justify-between items-center bg-slate-950 p-2 rounded border border-slate-800">
+                                <span>Stärke (STR):</span>
+                                <div class="flex items-center gap-1">
+                                    <button class="stat-btn bg-slate-800 hover:bg-slate-700 w-5 h-5 rounded font-bold" onclick="changeInitStat('str', -1)">-</button>
+                                    <span id="valStr" class="w-6 text-center font-bold text-amber-400">5</span>
+                                    <button class="stat-btn bg-slate-800 hover:bg-slate-700 w-5 h-5 rounded font-bold" onclick="changeInitStat('str', 1)">+</button>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center bg-slate-950 p-2 rounded border border-slate-800">
+                                <span>Geschick (DEX):</span>
+                                <div class="flex items-center gap-1">
+                                    <button class="stat-btn bg-slate-800 hover:bg-slate-700 w-5 h-5 rounded font-bold" onclick="changeInitStat('dex', -1)">-</button>
+                                    <span id="valDex" class="w-6 text-center font-bold text-amber-400">5</span>
+                                    <button class="stat-btn bg-slate-800 hover:bg-slate-700 w-5 h-5 rounded font-bold" onclick="changeInitStat('dex', 1)">+</button>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center bg-slate-950 p-2 rounded border border-slate-800">
+                                <span>Intelligenz (INT):</span>
+                                <div class="flex items-center gap-1">
+                                    <button class="stat-btn bg-slate-800 hover:bg-slate-700 w-5 h-5 rounded font-bold" onclick="changeInitStat('int', -1)">-</button>
+                                    <span id="valInt" class="w-6 text-center font-bold text-amber-400">5</span>
+                                    <button class="stat-btn bg-slate-800 hover:bg-slate-700 w-5 h-5 rounded font-bold" onclick="changeInitStat('int', 1)">+</button>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center bg-slate-950 p-2 rounded border border-slate-800">
+                                <span>Weisheit (WIS):</span>
+                                <div class="flex items-center gap-1">
+                                    <button class="stat-btn bg-slate-800 hover:bg-slate-700 w-5 h-5 rounded font-bold" onclick="changeInitStat('wis', -1)">-</button>
+                                    <span id="valWis" class="w-6 text-center font-bold text-amber-400">5</span>
+                                    <button class="stat-btn bg-slate-800 hover:bg-slate-700 w-5 h-5 rounded font-bold" onclick="changeInitStat('wis', 1)">+</button>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center bg-slate-950 p-2 rounded border border-slate-800">
+                                <span>Agilität (AGI):</span>
+                                <div class="flex items-center gap-1">
+                                    <button class="stat-btn bg-slate-800 hover:bg-slate-700 w-5 h-5 rounded font-bold" onclick="changeInitStat('agi', -1)">-</button>
+                                    <span id="valAgi" class="w-6 text-center font-bold text-amber-400">5</span>
+                                    <button class="stat-btn bg-slate-800 hover:bg-slate-700 w-5 h-5 rounded font-bold" onclick="changeInitStat('agi', 1)">+</button>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center bg-slate-950 p-2 rounded border border-slate-800">
+                                <span>Ausdauer (VIT):</span>
+                                <div class="flex items-center gap-1">
+                                    <button class="stat-btn bg-slate-800 hover:bg-slate-700 w-5 h-5 rounded font-bold" onclick="changeInitStat('vit', -1)">-</button>
+                                    <span id="valVit" class="w-6 text-center font-bold text-amber-400">5</span>
+                                    <button class="stat-btn bg-slate-800 hover:bg-slate-700 w-5 h-5 rounded font-bold" onclick="changeInitStat('vit', 1)">+</button>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center bg-slate-950 p-2 rounded border border-slate-800 col-span-2">
+                                <span>Rüstung/Abwehr (ARM):</span>
+                                <div class="flex items-center gap-1">
+                                    <button class="stat-btn bg-slate-800 hover:bg-slate-700 w-5 h-5 rounded font-bold" onclick="changeInitStat('arm', -1)">-</button>
+                                    <span id="valArm" class="w-6 text-center font-bold text-amber-400">5</span>
+                                    <button class="stat-btn bg-slate-800 hover:bg-slate-700 w-5 h-5 rounded font-bold" onclick="changeInitStat('arm', 1)">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Unique S-Rank Skill -->
+                    <div class="border-t border-slate-800 pt-2">
+                        <label class="text-xs font-bold text-rose-400 block mb-1 flex items-center gap-1">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Einzigartiger S-Rang Skill
+                        </label>
+                        <input type="text" id="initSRankName" value="Klingen-Souveränität" placeholder="Name des S-Skills" class="w-full bg-slate-950 border border-rose-900/60 rounded-lg px-3 py-1.5 text-xs text-rose-300 font-bold outline-none mb-1">
+                        <textarea id="initSRankDesc" rows="2" placeholder="Beschreibung des Effekt (z.B. Erlaubt die Kontrolle über alle magischen Schwerter im Umkreis...)" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-300 outline-none resize-none"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Key Input -->
+            <div class="space-y-1 pt-2 border-t border-slate-800">
+                <label class="text-xs text-amber-400 font-semibold block">Gemini API-Schlüssel</label>
+                <input type="password" id="initApiKey" placeholder="API Key hier einfügen" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 outline-none focus:border-amber-500">
+            </div>
+
+            <button onclick="confirmCharacterCreation()" class="w-full py-3 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-slate-950 font-extrabold rounded-xl shadow-lg fantasy-font tracking-wider text-base transition transform active:scale-98">
+                In Aethenia Erwachen
+            </button>
+        </div>
+    </div>
+
+    <!-- TOP NAV HEADER -->
+    <header class="h-14 border-b border-slate-800 bg-aethenia-panel/90 backdrop-blur px-4 flex items-center justify-between z-20 shrink-0">
+        <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-rose-600 flex items-center justify-center shadow-lg border border-amber-400/30">
+                <i class="fa-solid fa-dragon text-slate-950 text-base"></i>
+            </div>
+            <div>
+                <h1 class="text-base font-bold tracking-wider text-amber-400 fantasy-font leading-none">Aethenia</h1>
+                <p class="text-[10px] text-slate-400 mono-font">Echoes of Rebirth</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+            <!-- Sidebar Drawer Toggles -->
+            <button onclick="toggleDrawer('heroDrawer')" class="p-2 px-3 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-xs text-amber-400 flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-user-shield"></i>
+                <span class="hidden md:inline">Heldenblatt</span>
+            </button>
+
+            <button onclick="toggleDrawer('partyDrawer')" class="p-2 px-3 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-xs text-blue-400 flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-users"></i>
+                <span class="hidden md:inline">Party (<span id="partyCountText">1/5</span>)</span>
+            </button>
+
+            <button onclick="toggleDrawer('notesDrawer')" class="p-2 px-3 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-xs text-purple-400 flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-book-bookmark"></i>
+                <span class="hidden md:inline">Notizen</span>
+            </button>
+
+            <button onclick="openSettingsModal()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition" title="Einstellungen">
+                <i class="fa-solid fa-gear"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- TOP STATS BAR (REQUIRED BY SPECIFICATION) -->
+    <section class="bg-slate-950 border-b border-slate-800 px-4 py-2 flex flex-wrap items-center justify-between text-xs sm:text-sm gap-2 z-10 shrink-0">
+        <!-- Hero Stats Line -->
+        <div class="flex items-center space-x-4 sm:space-x-6 flex-wrap">
+            <span class="font-bold text-amber-300 fantasy-font">
+                <span id="topName">Kaelen</span> <span class="text-xs text-slate-400 font-sans">(Lv. <span id="topLevel">1</span>)</span>
+            </span>
+
+            <!-- HP Bar -->
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-heart text-red-500"></i>
+                <div class="w-20 sm:w-28 bg-slate-900 h-2.5 rounded-full overflow-hidden border border-slate-800">
+                    <div id="topHpFill" class="bg-gradient-to-r from-red-600 to-rose-500 h-full transition-all" style="width: 100%;"></div>
+                </div>
+                <span class="mono-font text-xs"><span id="topHp">100</span>/<span id="topMaxHp">100</span></span>
+            </div>
+
+            <!-- Mana Bar -->
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-wand-magic-sparkles text-blue-400"></i>
+                <div class="w-20 sm:w-28 bg-slate-900 h-2.5 rounded-full overflow-hidden border border-slate-800">
+                    <div id="topManaFill" class="bg-gradient-to-r from-blue-600 to-cyan-400 h-full transition-all" style="width: 100%;"></div>
+                </div>
+                <span class="mono-font text-xs"><span id="topMana">50</span>/<span id="topMaxMana">50</span></span>
+            </div>
+
+            <!-- XP Bar -->
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-star text-purple-400"></i>
+                <div class="w-20 sm:w-24 bg-slate-900 h-2 rounded-full overflow-hidden border border-slate-800">
+                    <div id="topXpFill" class="bg-purple-500 h-full transition-all" style="width: 0%;"></div>
+                </div>
+                <span class="mono-font text-[11px] text-slate-400"><span id="topXp">0</span> / <span id="topNextXp">100</span> XP</span>
+            </div>
+        </div>
+
+        <!-- Gold Stat -->
+        <div class="flex items-center space-x-3 text-amber-400 font-bold mono-font">
+            <i class="fa-solid fa-coins text-amber-500"></i>
+            <span id="topGold">0</span> G
+        </div>
+    </section>
+
+    <!-- MAIN BODY GRID -->
+    <div class="flex-1 flex overflow-hidden relative">
+
+        <!-- MAIN STORY CHAT AREA (15-25 LINES HEIGHT) -->
+        <main class="flex-1 flex flex-col h-full bg-aethenia-bg relative overflow-hidden">
+            
+            <!-- Story Messages Log (15-25 lines visible area) -->
+            <div id="storyLog" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 font-serif leading-relaxed text-slate-200">
+                <!-- Story Messages injected here -->
+            </div>
+
+            <!-- Typing/Loading Status -->
+            <div id="typingIndicator" class="hidden px-6 py-2 text-xs text-amber-400 flex items-center space-x-2 animate-pulse bg-slate-950/80 border-t border-slate-800">
+                <i class="fa-solid fa-feather-pointed fa-spin"></i>
+                <span id="typingText">Das Schicksal von Aethenia entfaltet sich...</span>
+            </div>
+
+            <!-- BOTTOM INTERACTION CONTAINER (REQUIRED LAYOUT) -->
+            <div class="bg-aethenia-panel border-t border-slate-800 p-3 sm:p-4 space-y-3 shrink-0">
+                
+                <!-- 1. Quick Action Chips -->
+                <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs">
+                    <span class="text-[10px] text-slate-500 font-mono uppercase shrink-0">Aktionen:</span>
+                    <button onclick="sendQuickAction('Umgebung untersuchen')" class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 whitespace-nowrap transition">
+                        👁️ Umgebung untersuchen
+                    </button>
+                    <button onclick="sendQuickAction('Waffe ziehen')" class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 whitespace-nowrap transition">
+                        🗡️ Waffe ziehen
+                    </button>
+                    <button onclick="sendQuickAction('Mit der Person sprechen')" class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 whitespace-nowrap transition">
+                        🗣️ Mit der Person sprechen
+                    </button>
+                    <button onclick="sendQuickAction('Statusfenster öffnen')" class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-400 whitespace-nowrap transition">
+                        📜 Statusfenster prüfen
+                    </button>
+                </div>
+
+                <!-- 2. KI Suggestion Options (2 Choices) -->
+                <div id="aiSuggestionsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button id="suggestBtn1" onclick="chooseSuggestion(1)" class="text-left text-xs p-2.5 rounded-xl bg-slate-900 hover:bg-amber-950/40 border border-slate-800 hover:border-amber-500/50 text-slate-300 transition flex items-start gap-2">
+                        <span class="text-amber-500 font-bold">1.</span>
+                        <span id="suggestText1" class="line-clamp-2">Warte auf KI-Vorschlag...</span>
+                    </button>
+                    <button id="suggestBtn2" onclick="chooseSuggestion(2)" class="text-left text-xs p-2.5 rounded-xl bg-slate-900 hover:bg-amber-950/40 border border-slate-800 hover:border-amber-500/50 text-slate-300 transition flex items-start gap-2">
+                        <span class="text-amber-500 font-bold">2.</span>
+                        <span id="suggestText2" class="line-clamp-2">Warte auf KI-Vorschlag...</span>
+                    </button>
+                </div>
+
+                <!-- 3. Custom Text Input + Slash commands & Send Button -->
+                <form id="actionForm" class="flex items-center gap-2">
+                    <div class="relative flex-1">
+                        <input type="text" id="actionInput" placeholder="Eigene Aktion eingeben oder Slash-Befehl (/logik, /status-check)..." 
+                            class="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-slate-100 placeholder-slate-500 outline-none transition mono-font">
+                    </div>
+                    <button type="submit" id="sendBtn" class="bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-slate-950 font-bold px-5 py-2.5 rounded-xl transition flex items-center gap-2 shadow-lg shrink-0">
+                        <span class="hidden sm:inline font-sans text-xs">Senden</span>
+                        <i class="fa-solid fa-paper-plane text-sm"></i>
+                    </button>
+                </form>
+            </div>
+        </main>
+
+        <!-- RIGHT DRAWERS / SIDEBARS (HERO, PARTY, NOTES) -->
+
+        <!-- 1. HELDENBLATT DRAWER -->
+        <aside id="heroDrawer" class="absolute right-0 top-0 h-full w-80 sm:w-96 bg-aethenia-panel border-l border-slate-800 z-30 transform translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
+            <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+                <h2 class="text-sm font-bold text-amber-400 fantasy-font flex items-center gap-2">
+                    <i class="fa-solid fa-user-shield"></i> Status & Heldenblatt
+                </h2>
+                <button onclick="toggleDrawer('heroDrawer')" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
+                <!-- S-Rank Skill Card -->
+                <div class="bg-rose-950/30 border border-rose-800/60 p-3 rounded-xl space-y-1 s-rank-glow">
+                    <div class="flex justify-between items-center">
+                        <span class="font-extrabold text-rose-400 fantasy-font flex items-center gap-1">
+                            <i class="fa-solid fa-crown text-amber-400"></i> <span id="sheetSRankName">Klingen-Souveränität</span>
+                        </span>
+                        <span class="px-1.5 py-0.5 text-[9px] bg-rose-600 text-slate-950 font-bold rounded font-mono">S-RANG</span>
+                    </div>
+                    <p id="sheetSRankDesc" class="text-slate-300 italic text-[11px]">Steuert magische Schwerter.</p>
+                </div>
+
+                <!-- Attributes & Level Up Points -->
+                <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-1">
+                        <span class="font-bold text-amber-400 uppercase tracking-wider text-[11px]">Attribute</span>
+                        <span class="text-[10px] text-purple-300 font-mono">Freie Attribute: <span id="sheetUnusedPoints">0</span></span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 text-[11px]">
+                        <div class="bg-slate-950 p-2 rounded border border-slate-800 flex justify-between">
+                            <span class="text-slate-400">Stärke (STR):</span> <span id="sheetStr" class="font-bold text-amber-300">5</span>
+                        </div>
+                        <div class="bg-slate-950 p-2 rounded border border-slate-800 flex justify-between">
+                            <span class="text-slate-400">Geschick (DEX):</span> <span id="sheetDex" class="font-bold text-amber-300">5</span>
+                        </div>
+                        <div class="bg-slate-950 p-2 rounded border border-slate-800 flex justify-between">
+                            <span class="text-slate-400">Intelligenz (INT):</span> <span id="sheetInt" class="font-bold text-amber-300">5</span>
+                        </div>
+                        <div class="bg-slate-950 p-2 rounded border border-slate-800 flex justify-between">
+                            <span class="text-slate-400">Weisheit (WIS):</span> <span id="sheetWis" class="font-bold text-amber-300">5</span>
+                        </div>
+                        <div class="bg-slate-950 p-2 rounded border border-slate-800 flex justify-between">
+                            <span class="text-slate-400">Agilität (AGI):</span> <span id="sheetAgi" class="font-bold text-amber-300">5</span>
+                        </div>
+                        <div class="bg-slate-950 p-2 rounded border border-slate-800 flex justify-between">
+                            <span class="text-slate-400">Ausdauer (VIT):</span> <span id="sheetVit" class="font-bold text-amber-300">5</span>
+                        </div>
+                        <div class="bg-slate-950 p-2 rounded border border-slate-800 flex justify-between col-span-2">
+                            <span class="text-slate-400">Rüstung (ARM):</span> <span id="sheetArm" class="font-bold text-amber-300">5</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resistenzen & Zusatzwerte -->
+                <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-1.5 text-[11px]">
+                    <span class="font-bold text-slate-400 uppercase tracking-wider block text-[10px] mb-1">Kampfwerte & Resistenzen</span>
+                    <div class="flex justify-between border-b border-slate-800/60 py-0.5">
+                        <span class="text-slate-400">Kritische Trefferchance:</span>
+                        <span id="sheetCritChance" class="font-mono text-amber-400">5%</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-800/60 py-0.5">
+                        <span class="text-slate-400">Magieresistenz:</span>
+                        <span id="sheetMagRes" class="font-mono text-blue-400">10%</span>
+                    </div>
+                    <div class="flex justify-between py-0.5">
+                        <span class="text-slate-400">Gift-/Zustandswiderstand:</span>
+                        <span id="sheetStatusRes" class="font-mono text-emerald-400">15%</span>
+                    </div>
+                </div>
+
+                <!-- Inventar & Ausrüstung -->
+                <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-1">
+                        <span class="font-bold text-amber-400 uppercase tracking-wider text-[11px]">Ausrüstung & Inventar</span>
+                        <button onclick="addNewItemPrompt()" class="text-[10px] text-amber-400 hover:underline">+ Item</button>
+                    </div>
+                    <ul id="sheetInventoryList" class="space-y-1 text-[11px]">
+                        <!-- Dynamic Inventory Items -->
+                    </ul>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 2. PARTY & FAMILIARS DRAWER (MAX 5 MEMBERS) -->
+        <aside id="partyDrawer" class="absolute right-0 top-0 h-full w-80 sm:w-96 bg-aethenia-panel border-l border-slate-800 z-30 transform translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
+            <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+                <h2 class="text-sm font-bold text-blue-400 fantasy-font flex items-center gap-2">
+                    <i class="fa-solid fa-users"></i> Gefährten & Vertraute
+                </h2>
+                <button onclick="toggleDrawer('partyDrawer')" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
+                <div class="text-[11px] text-slate-400 bg-slate-900 p-2.5 rounded-lg border border-slate-800">
+                    Max. Partygröße: <strong>5</strong> (User + 4 NPCs). Vertraute (Familiars) zählen nicht zum Party-Limit.
+                </div>
+
+                <!-- Love Interest Spotlight -->
+                <div class="bg-rose-950/20 border border-rose-800/50 p-3 rounded-xl space-y-1">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-rose-300 fantasy-font flex items-center gap-1">
+                            <i class="fa-solid fa-heart text-rose-500"></i> <span id="partyLoveName">Lyra</span>
+                        </span>
+                        <span class="text-[10px] text-rose-400 italic">Love Interest</span>
+                    </div>
+                    <p id="partyLoveDesc" class="text-[11px] text-slate-300">Noch nicht in der Party anwesend.</p>
+                </div>
+
+                <!-- Party Member List -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-slate-400 text-[11px] uppercase">Aktive Gruppe</span>
+                        <button onclick="addPartyMemberPrompt()" class="text-[10px] text-blue-400 hover:underline">+ Mitglied</button>
+                    </div>
+                    <div id="partyMemberList" class="space-y-2">
+                        <!-- Dynamic Party Members -->
+                    </div>
+                </div>
+
+                <!-- Familiars Section -->
+                <div class="space-y-2 border-t border-slate-800 pt-3">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-emerald-400 text-[11px] uppercase flex items-center gap-1">
+                            <i class="fa-solid fa-paw"></i> Begleittiere & Familiars
+                        </span>
+                        <button onclick="addFamiliarPrompt()" class="text-[10px] text-emerald-400 hover:underline">+ Vertrauter</button>
+                    </div>
+                    <div id="familiarList" class="space-y-2">
+                        <!-- Dynamic Familiars -->
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 3. KI-NOTIZBUCH DRAWER -->
+        <aside id="notesDrawer" class="absolute right-0 top-0 h-full w-80 sm:w-96 bg-aethenia-panel border-l border-slate-800 z-30 transform translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
+            <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+                <h2 class="text-sm font-bold text-purple-400 fantasy-font flex items-center gap-2">
+                    <i class="fa-solid fa-book-bookmark"></i> KI-Notizen & Gedächtnis
+                </h2>
+                <button onclick="toggleDrawer('notesDrawer')" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <div class="flex-1 flex flex-col p-4 space-y-3 text-xs">
+                <p class="text-[11px] text-slate-400">
+                    Trage hier wichtige Notizen, Welt-Regeln oder Versprechen ein. Die KI wird diese Notizen bei jedem Zug berücksichtigen.
+                </p>
+
+                <!-- Text display / Editor -->
+                <textarea id="aiNotesInput" rows="16" placeholder="Beispiel:\n- Ich habe dem Dorfältesten versprochen, die Banditen nicht zu töten.\n- Lyra mag keine Spinnen.\n- Mein S-Rang Skill verbraucht 20 Mana."
+                    class="w-full flex-1 bg-slate-950 border border-slate-800 focus:border-purple-500 rounded-xl p-3 text-slate-200 outline-none resize-none mono-font text-xs leading-relaxed"></textarea>
+
+                <button onclick="saveNotes()" class="w-full py-2 bg-purple-700 hover:bg-purple-600 text-slate-100 font-bold rounded-lg transition text-xs">
+                    Notizen im KI-Speicher Sichern
+                </button>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-aethenia-panel border border-slate-700 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl relative">
+            <button onclick="closeSettingsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark text-xl"></i></button>
+
+            <h2 class="text-lg font-bold text-amber-400 fantasy-font flex items-center gap-2">
+                <i class="fa-solid fa-sliders"></i> Spiel-Einstellungen
+            </h2>
+
+            <div class="space-y-1">
+                <label class="text-xs text-slate-300 block">Gemini API Key</label>
+                <input type="password" id="settingsApiKey" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 outline-none">
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-xs text-slate-300 block">KI Modell</label>
+                <select id="settingsModel" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 outline-none">
+                    <option value="gemini-3-flash-preview">gemini-3-flash-preview (Empfohlen)</option>
+                </select>
+            </div>
+
+            <button onclick="saveSettings()" class="w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold rounded-xl text-xs transition">
+                Einstellungen Speichern
+            </button>
+            <button onclick="resetGame()" class="w-full py-2 bg-red-950/60 hover:bg-red-900 border border-red-800/60 text-red-300 font-bold rounded-xl text-xs transition">
+                Neues Spiel / Reinkarnation Neustart
+            </button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC ENGINE -->
+    <script>
+        // --- GAME STATE DATA STRUCTURE ---
+        const DEFAULT_GAME_STATE = {
+            apiKey: '',
+            model: 'gemini-3-flash-preview',
+            hero: {
+                name: 'Kaelen',
+                gender: 'Männlich',
+                age: 19,
+                race: 'Mensch',
+                class: 'Schatten-Magier',
+                level: 1,
+                xp: 0,
+                nextXp: 100,
+                hp: 100,
+                maxHp: 100,
+                mana: 50,
+                maxMana: 50,
+                gold: 0,
+                unusedStatPoints: 0,
+                stats: { str: 5, dex: 5, int: 5, wis: 5, agi: 5, vit: 5, arm: 5 },
+                sRankSkill: { name: 'Klingen-Souveränität', desc: 'Ermöglicht telekinetische Führung magischer Klingen.' },
+                inventory: [
+                    { name: 'Erwachtengewand (Gewöhnlich)', type: 'Rüstung' },
+                    { name: 'Kleines Heilpotions-Set (2x)', type: 'Trank' }
+                ]
+            },
+            loveInterest: {
+                name: 'Lyra',
+                desc: 'Eine geheimnisvolle Magierin mit silbernem Haar und tragischer Vergangenheit.'
+            },
+            party: [
+                // User is slot 0 conceptually, max 4 additional NPCs
+            ],
+            familiars: [],
+            notes: "Ich bin soeben allein in einem mystischen Wald in Aethenia aufgewacht. Vor mir schwebt ein bläuliches Statusfenster.",
+            chatHistory: [],
+            currentSuggestions: ["Den Wald nach Pfaden durchsuchen", "Das Statusfenster genauer analysieren"]
+        };
+
+        let state = JSON.parse(localStorage.getItem('aethenia_rpg_state')) || JSON.parse(JSON.stringify(DEFAULT_GAME_STATE));
+
+        // Temp storage for creation screen alloc points
+        let initAllocPoints = 15;
+        let tempStats = { str: 5, dex: 5, int: 5, wis: 5, agi: 5, vit: 5, arm: 5 };
+
+        // --- SYSTEM PROMPT GENERATOR ---
+        function buildSystemPrompt() {
+            const h = state.hero;
+            const p = state.party.map(m => `${m.name} (${m.role}, LP:${m.hp}/${m.maxHp})`).join(', ') || 'Keine Gefährten (Allein)';
+            const f = state.familiars.map(fam => `${fam.name} (${fam.type})`).join(', ') || 'Keine Vertrauten';
+
+            return `Du bist der Game Master (Spielleiter) für ein interaktives P&P Text-RPG in der Fantasy-Welt "Aethenia".
+Die Geschichte basiert auf einer Isekai-Wiedergeburt. Der Spieler erwachte allein in einem Wald vor einem blauen Spiel-Statusfenster.
+
+CHARAKTER-STATUS DES SPIELERS:
+- Name: ${h.name} (${h.gender}, ${h.age} Jahre, Rasse: ${h.race}, Klasse: ${h.class})
+- Level: ${h.level} | XP: ${h.xp}/${h.nextXp}
+- HP: ${h.hp}/${h.maxHp} | Mana: ${h.mana}/${h.maxMana} | Gold: ${h.gold}
+- ATTRIBUTE: STR:${h.stats.str}, DEX:${h.stats.dex}, INT:${h.stats.int}, WIS:${h.stats.wis}, AGI:${h.stats.agi}, VIT:${h.stats.vit}, ARM:${h.stats.arm}
+- S-RANG SKILL: "${h.sRankSkill.name}" -> ${h.sRankSkill.desc}
+- LOVE-INTEREST: Name="${state.loveInterest.name}", Beschreibung="${state.loveInterest.desc}"
+- INVENTAR: ${h.inventory.map(i => i.name).join(', ')}
+
+PARTY & BEGLEITER:
+- Party (${state.party.length + 1}/5): ${p}
+- Vertraute: ${f}
+
+BENUTZER-NOTIZEN / STORY-BEDINGUNGEN:
+${state.notes}
+
+SPIELREGELN:
+1. Erzähle lebendig, immersiv und atmosphärisch auf Deutsch (ca. 2-4 Absätze).
+2. Es gibt KEINE WÜRFEL. Berechne Aktionen logisch basierend auf Attributen (z.B. AGI für Ausweichen/Krit, STR für Physisch, INT/WIS für Magie/Mana).
+3. Beachte die Kampf-Reihenfolge: Held greift zuerst an -> dann Party-Mitglieder -> dann Gegner.
+4. Berechne Trefferchancen & Schaden: Schaden = (Angriffswert - Rüstungswert) * Krit-Multiplikator.
+5. Verwalte Gold, Loot (Gewöhnlich, Magisch, Selten, Episch, Legendär) und XP.
+6. XP-Formel für Levelup: Nächstes Level benötigt (Level-1)^1.5 * 100 + 100 XP.
+7. Am Ende jeder deiner Antworten MÜSSEN ZWEI kurze, prägnante Aktionsvorschläge für den Spieler stehen!
+8. Schreibe am Ende deiner Antwort einen JSON-artigen Befehlsblock für Stat-Aktualisierungen im Format:
+   [STATE_UPDATE: HP_DELTA=0, MANA_DELTA=0, XP_GAIN=0, GOLD_GAIN=0, ADD_ITEM="", REMOVE_ITEM="", SUGGEST_1="...", SUGGEST_2="..."]
+`;
+        }
+
+        // --- DOM ELEMENTS ---
+        const storyLog = document.getElementById('storyLog');
+        const actionForm = document.getElementById('actionForm');
+        const actionInput = document.getElementById('actionInput');
+        const typingIndicator = document.getElementById('typingIndicator');
+
+        // --- INITIALIZATION ---
+        window.addEventListener('DOMContentLoaded', () => {
+            if (!state.apiKey || state.chatHistory.length === 0) {
+                document.getElementById('charCreationModal').classList.remove('hidden');
+            } else {
+                document.getElementById('charCreationModal').classList.add('hidden');
+                updateUI();
+                renderChatHistory();
+            }
+        });
+
+        // --- STAT ALLOCATION IN CREATION SCREEN ---
+        function changeInitStat(statKey, delta) {
+            if (delta > 0 && initAllocPoints > 0) {
+                tempStats[statKey]++;
+                initAllocPoints--;
+            } else if (delta < 0 && tempStats[statKey] > 5) {
+                tempStats[statKey]--;
+                initAllocPoints++;
+            }
+            document.getElementById('initFreePoints').textContent = initAllocPoints;
+            document.getElementById(`val${statKey.charAt(0).toUpperCase() + statKey.slice(1)}`).textContent = tempStats[statKey];
+        }
+
+        function confirmCharacterCreation() {
+            const key = document.getElementById('initApiKey').value.trim();
+            if (!key && !state.apiKey) {
+                alert('Bitte trage deinen Gemini API Key ein!');
+                return;
+            }
+
+            if (key) state.apiKey = key;
+
+            state.hero.name = document.getElementById('initName').value.trim() || 'Kaelen';
+            state.hero.gender = document.getElementById('initGender').value;
+            state.hero.age = parseInt(document.getElementById('initAge').value) || 19;
+            state.hero.race = document.getElementById('initRace').value;
+            state.hero.class = document.getElementById('initClass').value;
+
+            state.loveInterest.name = document.getElementById('initLoveName').value.trim() || 'Lyra';
+            state.loveInterest.desc = document.getElementById('initLoveDesc').value.trim() || 'Geheimnisvolle Gefährtin.';
+
+            state.hero.sRankSkill.name = document.getElementById('initSRankName').value.trim() || 'S-Skill';
+            state.hero.sRankSkill.desc = document.getElementById('initSRankDesc').value.trim() || 'Mächtiger Skill.';
+
+            state.hero.stats = { ...tempStats };
+
+            // Recalculate Initial HP & Mana
+            state.hero.maxHp = 100 + (state.hero.stats.vit * 10);
+            state.hero.hp = state.hero.maxHp;
+            state.hero.maxMana = 50 + (state.hero.stats.wis * 10);
+            state.hero.mana = state.hero.maxMana;
+
+            document.getElementById('charCreationModal').classList.add('hidden');
+            saveState();
+            updateUI();
+
+            // Start First Scene
+            startIntroStory();
+        }
+
+        function saveState() {
+            localStorage.setItem('aethenia_rpg_state', JSON.stringify(state));
+        }
+
+        // --- UPDATE UI ELEMENTS ---
+        function updateUI() {
+            const h = state.hero;
+            // Top Bar
+            document.getElementById('topName').textContent = h.name;
+            document.getElementById('topLevel').textContent = h.level;
+            document.getElementById('topHp').textContent = h.hp;
+            document.getElementById('topMaxHp').textContent = h.maxHp;
+            document.getElementById('topHpFill').style.width = `${Math.max(0, (h.hp / h.maxHp) * 100)}%`;
+
+            document.getElementById('topMana').textContent = h.mana;
+            document.getElementById('topMaxMana').textContent = h.maxMana;
+            document.getElementById('topManaFill').style.width = `${Math.max(0, (h.mana / h.maxMana) * 100)}%`;
+
+            document.getElementById('topXp').textContent = h.xp;
+            document.getElementById('topNextXp').textContent = h.nextXp;
+            document.getElementById('topXpFill').style.width = `${Math.max(0, (h.xp / h.nextXp) * 100)}%`;
+
+            document.getElementById('topGold').textContent = h.gold;
+
+            // Hero Sheet
+            document.getElementById('sheetSRankName').textContent = h.sRankSkill.name;
+            document.getElementById('sheetSRankDesc').textContent = h.sRankSkill.desc;
+            document.getElementById('sheetUnusedPoints').textContent = h.unusedStatPoints;
+
+            document.getElementById('sheetStr').textContent = h.stats.str;
+            document.getElementById('sheetDex').textContent = h.stats.dex;
+            document.getElementById('sheetInt').textContent = h.stats.int;
+            document.getElementById('sheetWis').textContent = h.stats.wis;
+            document.getElementById('sheetAgi').textContent = h.stats.agi;
+            document.getElementById('sheetVit').textContent = h.stats.vit;
+            document.getElementById('sheetArm').textContent = h.stats.arm;
+
+            document.getElementById('sheetCritChance').textContent = `${5 + Math.floor(h.stats.agi * 0.8)}%`;
+            document.getElementById('sheetMagRes').textContent = `${10 + Math.floor(h.stats.wis * 0.5)}%`;
+            document.getElementById('sheetStatusRes').textContent = `${15 + Math.floor(h.stats.vit * 0.5)}%`;
+
+            // Render Inventory
+            const invList = document.getElementById('sheetInventoryList');
+            invList.innerHTML = '';
+            h.inventory.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.className = "flex justify-between items-center bg-slate-950 p-1.5 rounded border border-slate-800";
+                li.innerHTML = `
+                    <span>${item.name}</span>
+                    <button onclick="removeItem(${index})" class="text-slate-500 hover:text-red-400"><i class="fa-solid fa-trash"></i></button>
+                `;
+                invList.appendChild(li);
+            });
+
+            // Party & Love Interest
+            document.getElementById('partyCountText').textContent = `${state.party.length + 1}/5`;
+            document.getElementById('partyLoveName').textContent = state.loveInterest.name;
+            document.getElementById('partyLoveDesc').textContent = state.loveInterest.desc;
+
+            const partyList = document.getElementById('partyMemberList');
+            partyList.innerHTML = '';
+            state.party.forEach((member, index) => {
+                const div = document.createElement('div');
+                div.className = "bg-slate-900 p-2.5 rounded-lg border border-slate-800 space-y-1";
+                div.innerHTML = `
+                    <div class="flex justify-between font-bold text-blue-300">
+                        <span>${member.name} (${member.role})</span>
+                        <button onclick="removePartyMember(${index})" class="text-slate-500 hover:text-red-400 text-xs"><i class="fa-solid fa-user-minus"></i></button>
+                    </div>
+                    <div class="text-[10px] text-slate-400">LP: ${member.hp}/${member.maxHp}</div>
+                `;
+                partyList.appendChild(div);
+            });
+
+            // Suggestions
+            if (state.currentSuggestions && state.currentSuggestions.length >= 2) {
+                document.getElementById('suggestText1').textContent = state.currentSuggestions[0];
+                document.getElementById('suggestText2').textContent = state.currentSuggestions[1];
+            }
+
+            // Notes
+            document.getElementById('aiNotesInput').value = state.notes;
+        }
+
+        // --- CHAT DISPLAY LOGIC ---
+        function renderChatHistory() {
+            storyLog.innerHTML = '';
+            state.chatHistory.forEach(msg => {
+                appendStoryMessage(msg.role, msg.text);
+            });
+            scrollToBottom();
+        }
+
+        function appendStoryMessage(role, text) {
+            const isUser = role === 'user';
+            const div = document.createElement('div');
+            div.className = `flex ${isUser ? 'justify-end' : 'justify-start'} animate-fade-in`;
+
+            // Clean state update tags for clean UI display
+            const cleanText = text.replace(/\[STATE_UPDATE:.*?\]/gs, '').trim();
+
+            if (isUser) {
+                div.innerHTML = `
+                    <div class="max-w-[85%] bg-amber-950/40 border border-amber-600/40 text-slate-100 rounded-2xl rounded-tr-none p-4 shadow-md font-sans text-xs sm:text-sm">
+                        <span class="text-[10px] text-amber-400 font-bold block mb-1">>[ ${state.hero.name} ]</span>
+                        <div>${cleanText}</div>
+                    </div>
+                `;
+            } else {
+                div.innerHTML = `
+                    <div class="max-w-[95%] bg-aethenia-panel border border-slate-800 text-slate-200 rounded-2xl rounded-tl-none p-4 sm:p-5 shadow-xl space-y-2 text-xs sm:text-sm">
+                        <div class="flex items-center gap-2 border-b border-slate-800/80 pb-1">
+                            <i class="fa-solid fa-dragon text-amber-400 text-xs"></i>
+                            <span class="text-xs font-bold text-amber-400 fantasy-font">Aethenia Game Master</span>
+                        </div>
+                        <div class="whitespace-pre-wrap leading-relaxed font-serif text-slate-300">${cleanText}</div>
+                    </div>
+                `;
+            }
+
+            storyLog.appendChild(div);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            storyLog.scrollTop = storyLog.scrollHeight;
+        }
+
+        // --- GEMINI API CALL WITH RETRY & EXPONENTIAL BACKOFF ---
+        const delay = (ms) => new Promise(res => setTimeout(res, ms));
+
+        async function sendActionToAI(userInputText) {
+            if (!state.apiKey) {
+                alert("Bitte gib zuerst einen Gemini API-Schlüssel ein!");
+                openSettingsModal();
+                return;
+            }
+
+            // Slash Commands Interception
+            if (userInputText.startsWith('/logik')) {
+                userInputText = `[SLASH-BEFEHL /logik]: Bitte überprüfe die bisherige Geschichte und meine Notizen auf logische Konsistenz. Korrigiere Widersprüche in deiner Erzählung.`;
+            } else if (userInputText.startsWith('/status-check')) {
+                userInputText = `[SLASH-BEFEHL /status-check]: Bitte überprüfe alle Attributwerte, HP, Mana und Ausrüstung mit den bisherigen Ereignissen und passe den Status an.`;
+            }
+
+            // Push User Message
+            state.chatHistory.push({ role: 'user', text: userInputText });
+            appendStoryMessage('user', userInputText);
+            saveState();
+
+            typingIndicator.classList.remove('hidden');
+            scrollToBottom();
+
+            try {
+                const systemPrompt = buildSystemPrompt();
+                const payloadContents = state.chatHistory.map(m => ({
+                    role: m.role === 'user' ? 'user' : 'model',
+                    parts: [{ text: m.text }]
+                }));
+
+                const payload = {
+                    contents: payloadContents,
+                    systemInstruction: { parts: [{ text: systemPrompt }] }
+                };
+
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${state.model}:generateContent?key=${state.apiKey}`;
+
+                let response;
+                let retries = 3;
+                let backoff = 2000;
+
+                while (retries >= 0) {
+                    response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) break;
+
+                    if ((response.status === 503 || response.status === 429) && retries > 0) {
+                        await delay(backoff);
+                        backoff *= 2;
+                        retries--;
+                    } else {
+                        const err = await response.json().catch(() => ({}));
+                        throw new Error(err.error?.message || `Server-Antwort: ${response.status}`);
+                    }
+                }
+
+                const result = await response.json();
+                const aiText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (aiText) {
+                    parseStateUpdates(aiText);
+                    state.chatHistory.push({ role: 'model', text: aiText });
+                    appendStoryMessage('model', aiText);
+                    saveState();
+                    updateUI();
+                } else {
+                    throw new Error('Keine valide Antwort der KI erhalten.');
+                }
+
+            } catch (err) {
+                console.error(err);
+                appendStoryMessage('model', `⚠️ Fehler bei der Verbindung: ${err.message}`);
+            } finally {
+                typingIndicator.classList.add('hidden');
+            }
+        }
+
+        // --- PARSE STATE UPDATE TAGS FROM AI ---
+        function parseStateUpdates(text) {
+            const match = text.match(/\[STATE_UPDATE:\s*(.*?)\]/s);
+            if (match && match[1]) {
+                const content = match[1];
+                
+                // Helper to extract key value pairs
+                const getVal = (key) => {
+                    const m = content.match(new RegExp(`${key}=["']?(.*?)["']?(?:,|$)`));
+                    return m ? m[1].trim() : null;
+                };
+
+                const hpDelta = parseInt(getVal('HP_DELTA')) || 0;
+                const manaDelta = parseInt(getVal('MANA_DELTA')) || 0;
+                const xpGain = parseInt(getVal('XP_GAIN')) || 0;
+                const goldGain = parseInt(getVal('GOLD_GAIN')) || 0;
+
+                state.hero.hp = Math.max(0, Math.min(state.hero.maxHp, state.hero.hp + hpDelta));
+                state.hero.mana = Math.max(0, Math.min(state.hero.maxMana, state.hero.mana + manaDelta));
+                state.hero.gold = Math.max(0, state.hero.gold + goldGain);
+
+                // Handle XP and Exponential Level-Up
+                if (xpGain > 0) {
+                    state.hero.xp += xpGain;
+                    while (state.hero.xp >= state.hero.nextXp) {
+                        state.hero.xp -= state.hero.nextXp;
+                        state.hero.level++;
+                        state.hero.unusedStatPoints += 2;
+                        if (state.hero.level % 10 === 0) state.hero.unusedStatPoints += 3; // Bonus for every 10th level
+                        
+                        // Auto scaling HP & Mana (+20%)
+                        state.hero.maxHp = Math.floor(state.hero.maxHp * 1.2);
+                        state.hero.hp = state.hero.maxHp;
+                        state.hero.maxMana = Math.floor(state.hero.maxMana * 1.2);
+                        state.hero.mana = state.hero.maxMana;
+
+                        // Calculate exponential next XP
+                        state.hero.nextXp = Math.floor(Math.pow(state.hero.level - 1, 1.5) * 100 + 100);
+                    }
+                }
+
+                const addItem = getVal('ADD_ITEM');
+                if (addItem && addItem !== 'none' && addItem !== 'null') {
+                    state.hero.inventory.push({ name: addItem, type: 'Loot' });
+                }
+
+                const suggest1 = getVal('SUGGEST_1');
+                const suggest2 = getVal('SUGGEST_2');
+                if (suggest1 && suggest2) {
+                    state.currentSuggestions = [suggest1, suggest2];
+                }
+            }
+        }
+
+        // --- USER INTERACTIONS ---
+        actionForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const text = actionInput.value.trim();
+            if (text) {
+                actionInput.value = '';
+                sendActionToAI(text);
+            }
+        });
+
+        function sendQuickAction(actionText) {
+            sendActionToAI(actionText);
+        }
+
+        function chooseSuggestion(num) {
+            if (state.currentSuggestions && state.currentSuggestions[num - 1]) {
+                sendActionToAI(state.currentSuggestions[num - 1]);
+            }
+        }
+
+        function startIntroStory() {
+            state.chatHistory = [];
+            saveState();
+
+            const prompt = `Eröffne das Spiel! Ich erwache allein mitten in einem geheimnisvollen, uralten Wald in Aethenia. Vor meinen Augen schwebt das blaue Spiel-Statusfenster. Führe mich atmosphärisch in die Welt ein und präsentiere mir die erste Herausforderung.`;
+            sendActionToAI(prompt);
+        }
+
+        // Helper Drawer Toggle
+        function toggleDrawer(id) {
+            const drawer = document.getElementById(id);
+            const isHidden = drawer.classList.contains('translate-x-full');
+            
+            // Close others
+            ['heroDrawer', 'partyDrawer', 'notesDrawer'].forEach(dId => {
+                document.getElementById(dId).classList.add('translate-x-full');
+            });
+
+            if (isHidden) drawer.classList.remove('translate-x-full');
+        }
+
+        function saveNotes() {
+            state.notes = document.getElementById('aiNotesInput').value;
+            saveState();
+            alert('Notizen erfolgreich gespeichert!');
+        }
+
+        function removeItem(idx) {
+            state.hero.inventory.splice(idx, 1);
+            saveState();
+            updateUI();
+        }
+
+        function removePartyMember(idx) {
+            state.party.splice(idx, 1);
+            saveState();
+            updateUI();
+        }
+
+        function addNewItemPrompt() {
+            const item = prompt('Gegenstand eingeben:');
+            if (item) {
+                state.hero.inventory.push({ name: item, type: 'Diverses' });
+                saveState();
+                updateUI();
+            }
+        }
+
+        function addPartyMemberPrompt() {
+            if (state.party.length >= 4) {
+                alert('Maximale Partygröße von 5 Personen erreicht!');
+                return;
+            }
+            const name = prompt('Name des Begleiters:');
+            const role = prompt('Klasse/Rolle:');
+            if (name && role) {
+                state.party.push({ name, role, hp: 80, maxHp: 80 });
+                saveState();
+                updateUI();
+            }
+        }
+
+        function addFamiliarPrompt() {
+            const name = prompt('Name des Vertrauten:');
+            const type = prompt('Art (z.B. Schattenfuchs, Eule):');
+            if (name && type) {
+                state.familiars.push({ name, type });
+                saveState();
+                updateUI();
+            }
+        }
+
+        function openSettingsModal() {
+            document.getElementById('settingsApiKey').value = state.apiKey;
+            document.getElementById('settingsModal').classList.remove('hidden');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        function saveSettings() {
+            state.apiKey = document.getElementById('settingsApiKey').value.trim();
+            state.model = document.getElementById('settingsModel').value;
+            saveState();
+            closeSettingsModal();
+        }
+
+        function resetGame() {
+            if (confirm('Möchtest du deinen Helden wirklich löschen und neu in Aethenia reinkarnieren?')) {
+                localStorage.removeItem('aethenia_rpg_state');
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
